@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Happy Valentine’s 💗</title>
+  <style>
+    :root{
+      --bg1:#fff0f6;
+      --bg2:#ffe3ec;
+      --pink:#e75480;
+      --deep:#8e1b1b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 20% 10%, var(--bg2), transparent 60%),
+                  radial-gradient(1200px 700px at 80% 90%, var(--bg2), transparent 60%),
+                  linear-gradient(180deg, var(--bg1), #fff);
+      overflow:hidden;
+    }
+    .card{
+      width:min(560px, 92vw);
+      background: rgba(255,255,255,.7);
+      border: 1px solid rgba(231,84,128,.22);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 28px 22px;
+      text-align:center;
+      box-shadow: 0 18px 60px rgba(0,0,0,.08);
+    }
+    h1{
+      margin: 6px 0 6px;
+      font-size: clamp(32px, 5vw, 44px);
+      color: var(--deep);
+      letter-spacing: .2px;
+    }
+    p{
+      margin: 10px auto 18px;
+      max-width: 42ch;
+      color: #4a1f2a;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding: 14px 18px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--pink);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      cursor:pointer;
+      box-shadow: 0 10px 25px rgba(231,84,128,.35);
+      transform: translateY(0);
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .btn:active{ transform: translateY(2px); filter: brightness(.96); }
+    .hint{
+      font-size: 13px;
+      opacity: .75;
+      margin-top: 10px;
+    }
+    .hidden{ display:none; }
+
+    /* Flower burst */
+    .petal{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translate(-50%,-50%);
+      pointer-events:none;
+      opacity: 0;
+      will-change: transform, opacity;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.12));
+    }
+    .petal::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: radial-gradient(circle at 30% 30%, #fff, #ffd1dc 35%, #ff6aa2 70%, #e75480);
+      border-radius: 60% 40% 60% 40%;
+      transform: rotate(18deg);
+    }
+
+    @keyframes pop {
+      0%   { opacity:0; transform: translate(-50%,-50%) scale(.2) rotate(0deg); }
+      10%  { opacity:1; }
+      100% { opacity:0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1) rotate(var(--rot)); }
+    }
+
+    /* Floating background hearts */
+    .heart{
+      position:absolute;
+      bottom:-40px;
+      font-size: 22px;
+      opacity:.18;
+      animation: floatUp linear forwards;
+      pointer-events:none;
+      filter: blur(.1px);
+    }
+    @keyframes floatUp{
+      from{ transform: translateY(0) translateX(0); }
+      to{ transform: translateY(-120vh) translateX(var(--hx)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div id="screen1">
+      <h1>Hi Love 💗</h1>
+      <p>Turn your volume on… then tap the button for a little surprise 🌸</p>
+      <button class="btn" id="surpriseBtn">Tap Me 💐</button>
+      <div class="hint">Works best in Safari/Chrome on iPhone.</div>
+    </div>
+
+    <div id="screen2" class="hidden">
+      <h1>Happy Valentine’s, Love! 💗</h1>
+      <p>
+        Thank you for being my peace, my best friend, and my home.<br/>
+        I love you—today and always.
+      </p>
+      <button class="btn" id="replayBtn">Replay Flowers 🌸</button>
+      <div class="hint">Music plays after your first tap (phone rules 😅)</div>
+    </div>
+  </div>
+
+  <!-- Put an mp3 named "music.mp3" in the same folder (optional) -->
+  <audio id="bgm" preload="auto" loop>
+    <source src="music.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    const screen1 = document.getElementById("screen1");
+    const screen2 = document.getElementById("screen2");
+    const btn = document.getElementById("surpriseBtn");
+    const replay = document.getElementById("replayBtn");
+    const bgm = document.getElementById("bgm");
+
+    function burstFlowers(x, y, count = 40){
+      for(let i=0;i<count;i++){
+        const p = document.createElement("div");
+        p.className = "petal";
+        const angle = Math.random()*Math.PI*2;
+        const dist  = 80 + Math.random()*220;
+        const dx = Math.cos(angle)*dist;
+        const dy = Math.sin(angle)*dist;
+        const rot = (Math.random()*720 - 360).toFixed(0) + "deg";
+        const size = 12 + Math.random()*18;
+
+        p.style.width = p.style.height = size + "px";
+        p.style.left = x + "px";
+        p.style.top  = y + "px";
+        p.style.setProperty("--dx", dx.toFixed(0) + "px");
+        p.style.setProperty("--dy", dy.toFixed(0) + "px");
+        p.style.setProperty("--rot", rot);
+        p.style.animation = `pop ${650 + Math.random()*450}ms ease-out forwards`;
+        document.body.appendChild(p);
+
+        setTimeout(()=> p.remove(), 1400);
+      }
+    }
+
+    function sprinkleHearts(){
+      const emojis = ["💗","💕","💖","💘","💝"];
+      for(let i=0;i<14;i++){
+        const h = document.createElement("div");
+        h.className = "heart";
+        h.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        h.style.left = Math.random()*100 + "vw";
+        h.style.setProperty("--hx", (Math.random()*120 - 60).toFixed(0) + "px");
+        h.style.animationDuration = (6 + Math.random()*5).toFixed(2) + "s";
+        document.body.appendChild(h);
+        setTimeout(()=> h.remove(), 12000);
+      }
+    }
+
+    function centerBurst(){
+      const rect = document.body.getBoundingClientRect();
+      burstFlowers(rect.width/2, rect.height/2, 55);
+      sprinkleHearts();
+    }
+
+    btn.addEventListener("click", (e)=>{
+      // Show message screen
+      screen1.classList.add("hidden");
+      screen2.classList.remove("hidden");
+
+      // BOOM effect
+      const rect = btn.getBoundingClientRect();
+      burstFlowers(rect.left + rect.width/2, rect.top + rect.height/2, 55);
+      setTimeout(centerBurst, 250);
+
+      // Start music (allowed because user clicked)
+      bgm.play().catch(()=>{ /* if no music file, ignore */ });
+    });
+
+    replay.addEventListener("click", ()=>{
+      centerBurst();
+    });
+
+    // Optional: tap anywhere on screen2 to burst
+    document.addEventListener("click", (e)=>{
+      if(!screen2.classList.contains("hidden")){
+        burstFlowers(e.clientX, e.clientY, 22);
+      }
+    });
+  </script>
+</body>
+</html>
