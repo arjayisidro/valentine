@@ -153,7 +153,6 @@
     const screen2 = document.getElementById("screen2");
     const btn = document.getElementById("surpriseBtn");
     const replay = document.getElementById("replayBtn");
-    const bgm = document.getElementById("bgm");
 
     function burstFlowers(x, y, count = 40){
       for(let i=0;i<count;i++){
@@ -208,9 +207,6 @@
       const rect = btn.getBoundingClientRect();
       burstFlowers(rect.left + rect.width/2, rect.top + rect.height/2, 55);
       setTimeout(centerBurst, 250);
-
-      // Start music (allowed because user clicked)
-      bgm.play().catch(()=>{ /* if no music file, ignore */ });
     });
 
     replay.addEventListener("click", ()=>{
