@@ -33,6 +33,8 @@
       padding: 28px 22px;
       text-align:center;
       box-shadow: 0 18px 60px rgba(0,0,0,.08);
+      position: relative;
+      z-index: 2;
     }
     h1{
       margin: 6px 0 6px;
@@ -75,8 +77,6 @@
     /* Flower burst */
     .petal{
       position: absolute;
-      top: 50%;
-      left: 50%;
       width: 18px;
       height: 18px;
       transform: translate(-50%,-50%);
@@ -84,6 +84,7 @@
       opacity: 0;
       will-change: transform, opacity;
       filter: drop-shadow(0 6px 10px rgba(0,0,0,.12));
+      z-index: 1;
     }
     .petal::before{
       content:"";
@@ -93,7 +94,6 @@
       border-radius: 60% 40% 60% 40%;
       transform: rotate(18deg);
     }
-
     @keyframes pop {
       0%   { opacity:0; transform: translate(-50%,-50%) scale(.2) rotate(0deg); }
       10%  { opacity:1; }
@@ -109,10 +109,21 @@
       animation: floatUp linear forwards;
       pointer-events:none;
       filter: blur(.1px);
+      z-index: 0;
     }
     @keyframes floatUp{
       from{ transform: translateY(0) translateX(0); }
       to{ transform: translateY(-120vh) translateX(var(--hx)); }
+    }
+
+    /* Hidden YouTube player container */
+    #yt-wrap{
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
     }
   </style>
 </head>
@@ -122,6 +133,7 @@
       <h1>Hi Love 💗</h1>
       <p>Turn your volume on… then tap the button for a little surprise 🌸</p>
       <button class="btn" id="surpriseBtn">Tap Me 💐</button>
+      <div class="hint" id="musicHint">Music will start after you tap.</div>
     </div>
 
     <div id="screen2" class="hidden">
@@ -131,45 +143,26 @@
         I love you—today and always.
       </p>
       <button class="btn" id="replayBtn">Replay Flowers 🌸</button>
+      <div class="hint">Tap anywhere for more flowers ✨</div>
     </div>
   </div>
 
-  <!-- Put an mp3 named "music.mp3" in the same folder (optional) -->
-<!-- Hidden YouTube Background Music -->
-<!-- Hidden YouTube Background Music -->
-<div id="player" style="position:absolute; left:-9999px;"></div>
-
-<script src="https://www.youtube.com/iframe_api">
-
-  let player;
-
-  function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-      height: '0',
-      width: '0',
-      videoId: 'rtOvBOTyX00',
-      playerVars: {
-        'autoplay': 0,
-        'controls': 0,
-        'loop': 1,
-        'playlist': 'rtOvBOTyX00'
-      }
-    });
-  }
-
-</script>
-
+  <!-- Hidden YouTube Player -->
+  <div id="yt-wrap"><div id="player"></div></div>
 
   <script>
+    // ---------- UI ----------
     const screen1 = document.getElementById("screen1");
     const screen2 = document.getElementById("screen2");
     const btn = document.getElementById("surpriseBtn");
     const replay = document.getElementById("replayBtn");
+    const musicHint = document.getElementById("musicHint");
 
     function burstFlowers(x, y, count = 40){
       for(let i=0;i<count;i++){
         const p = document.createElement("div");
         p.className = "petal";
+
         const angle = Math.random()*Math.PI*2;
         const dist  = 80 + Math.random()*220;
         const dx = Math.cos(angle)*dist;
@@ -210,26 +203,82 @@
       sprinkleHearts();
     }
 
+    // ---------- YouTube ----------
+    const VIDEO_ID = "rtOvBOTyX00";
+    let player = null;
+    let ytReady = false;
+
+    function loadYouTubeAPI(){
+      return new Promise((resolve) => {
+        if (window.YT && window.YT.Player) return resolve();
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        window.onYouTubeIframeAPIReady = () => resolve();
+        document.head.appendChild(tag);
+      });
+    }
+
+    async function initPlayer(){
+      try{
+        await loadYouTubeAPI();
+        player = new YT.Player("player", {
+          height: "0",
+          width: "0",
+          videoId: VIDEO_ID,
+          playerVars: {
+            autoplay: 0,
+            controls: 0,
+            loop: 1,
+            playlist: VIDEO_ID,
+            playsinline: 1
+          },
+          events: {
+            onReady: () => { ytReady = true; }
+          }
+        });
+      } catch(e){
+        musicHint.textContent = "If music doesn’t play, your browser is blocking YouTube.";
+      }
+    }
+
+    initPlayer();
+
+    function tryPlayMusic(){
+      // Must be called inside the same tap to satisfy iPhone rules.
+      try{
+        if (player && ytReady){
+          // Some devices require unmute AFTER play starts; we do both.
+          player.playVideo();
+          player.unMute();
+          player.setVolume(70);
+          musicHint.textContent = "♪ Playing…";
+        } else {
+          musicHint.textContent = "Loading music… tap again if needed.";
+        }
+      } catch(e){
+        musicHint.textContent = "Music blocked by browser settings.";
+      }
+    }
+
+    // ---------- Events ----------
     btn.addEventListener("click", (e)=>{
-      // Show message screen
+      // Switch screen
       screen1.classList.add("hidden");
       screen2.classList.remove("hidden");
 
-      // BOOM effect
+      // BOOM
       const rect = btn.getBoundingClientRect();
       burstFlowers(rect.left + rect.width/2, rect.top + rect.height/2, 55);
       setTimeout(centerBurst, 250);
 
-      if (player) {
-        player.playVideo();
-      }
+      // Start music (must be inside this click)
+      tryPlayMusic();
     });
 
     replay.addEventListener("click", ()=>{
       centerBurst();
     });
 
-    // Optional: tap anywhere on screen2 to burst
     document.addEventListener("click", (e)=>{
       if(!screen2.classList.contains("hidden")){
         burstFlowers(e.clientX, e.clientY, 22);
