@@ -137,9 +137,18 @@
   </div>
 
   <!-- Put an mp3 named "music.mp3" in the same folder (optional) -->
-  <audio id="bgm" preload="auto" loop>
-    <source src="music.mp3" type="audio/mpeg" />
-  </audio>
+<!-- Hidden YouTube Background Music -->
+<iframe
+  id="ytplayer"
+  width="0"
+  height="0"
+  src="https://www.youtube.com/embed/rtOvBOTyX00?autoplay=1&loop=1&playlist=rtOvBOTyX00&controls=0&showinfo=0&modestbranding=1"
+  frameborder="0"
+  allow="autoplay"
+  allowfullscreen
+  style="position:absolute; left:-9999px;"
+></iframe>
+
 
   <script>
     const screen1 = document.getElementById("screen1");
