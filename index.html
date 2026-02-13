@@ -49,12 +49,6 @@
       line-height: 1.5;
       font-size: 16px;
     }
-    .btnRow{
-      display:flex;
-      gap:10px;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
     .btn{
       display:inline-flex;
       align-items:center;
@@ -74,12 +68,6 @@
       -webkit-tap-highlight-color: transparent;
     }
     .btn:active{ transform: translateY(2px); filter: brightness(.96); }
-    .btn.secondary{
-      background: rgba(231,84,128,.14);
-      color: #7b1630;
-      box-shadow:none;
-      border: 1px solid rgba(231,84,128,.22);
-    }
     .hint{
       font-size: 13px;
       opacity: .75;
@@ -135,15 +123,8 @@
     <div id="screen1">
       <h1>Hi Love 💗</h1>
       <p>Tap the button for a little surprise 🌸</p>
-
-      <div class="btnRow">
-        <button class="btn" id="surpriseBtn">Tap Me 💐</button>
-        <button class="btn secondary" id="openYTBtn" type="button">Open Song ▶️</button>
-      </div>
-
-      <div class="hint" id="musicHint">
-        (Music starts after you tap 💗)
-      </div>
+      <button class="btn" id="surpriseBtn">Tap Me 💐</button>
+      <div class="hint" id="musicHint"></div>
     </div>
 
     <div id="screen2" class="hidden">
@@ -152,17 +133,12 @@
         Thank you for being my peace, my best friend, and my home.<br/>
         I love you—today and always.
       </p>
-
-      <div class="btnRow">
-        <button class="btn" id="replayBtn">Replay Flowers 🌸</button>
-        <button class="btn secondary" id="toggleMusicBtn" type="button">Pause Music ⏸️</button>
-      </div>
-
+      <button class="btn" id="replayBtn">Replay Flowers 🌸</button>
       <div class="hint">Tap anywhere for more flowers ✨</div>
     </div>
   </div>
 
-  <!-- iPhone-safe background music (put music.m4a OR music.mp3 beside index.html) -->
+  <!-- iPhone-safe background music: add music.m4a (best) or music.mp3 next to index.html -->
   <audio id="bgm" preload="auto" loop playsinline webkit-playsinline>
     <source src="music.m4a" type="audio/mp4" />
     <source src="music.mp3" type="audio/mpeg" />
@@ -175,10 +151,6 @@
     const replay = document.getElementById("replayBtn");
     const bgm = document.getElementById("bgm");
     const musicHint = document.getElementById("musicHint");
-    const toggleMusicBtn = document.getElementById("toggleMusicBtn");
-    const openYTBtn = document.getElementById("openYTBtn");
-
-    const YT_URL = "https://www.youtube.com/watch?v=rtOvBOTyX00";
 
     function burstFlowers(x, y, count = 40){
       for(let i=0;i<count;i++){
@@ -225,53 +197,40 @@
       sprinkleHearts();
     }
 
-    async function startMusic(){
-      // Must be called directly from a user tap
+    async function startMusicOnTap(){
       try{
-        bgm.volume = 0.8;
-
-        // iOS sometimes needs currentTime set after user gesture
+        // iOS likes this inside user gesture
+        bgm.volume = 0.85;
         bgm.currentTime = 0;
 
+        // Sometimes iOS needs a tiny delay still within same gesture stack
         await bgm.play();
-        musicHint.textContent = "♪ Music playing…";
-        if (toggleMusicBtn) toggleMusicBtn.textContent = "Pause Music ⏸️";
+
+        musicHint.textContent = ""; // keep clean (no extra UI)
       } catch (err){
-        musicHint.textContent =
-          "Music didn’t start (file missing or blocked). Put music.m4a/mp3 beside index.html or tap Open Song ▶️.";
+        // Keep UI clean as requested, but log for debugging
+        console.log("Music play blocked or file missing:", err);
       }
     }
 
     btn.addEventListener("click", async ()=>{
+      // Switch screen
       screen1.classList.add("hidden");
       screen2.classList.remove("hidden");
 
+      // Flowers
       const rect = btn.getBoundingClientRect();
       burstFlowers(rect.left + rect.width/2, rect.top + rect.height/2, 55);
       setTimeout(centerBurst, 250);
 
-      await startMusic();
+      // Music (must happen on this tap)
+      await startMusicOnTap();
     });
 
     replay.addEventListener("click", ()=>{
       centerBurst();
     });
 
-    toggleMusicBtn.addEventListener("click", async ()=>{
-      if (bgm.paused) {
-        await startMusic();
-      } else {
-        bgm.pause();
-        toggleMusicBtn.textContent = "Play Music ▶️";
-        musicHint.textContent = "Music paused.";
-      }
-    });
-
-    openYTBtn.addEventListener("click", ()=>{
-      window.open(YT_URL, "_blank", "noopener,noreferrer");
-    });
-
-    // Tap anywhere on screen2 for more flowers (doesn't block button taps)
     document.addEventListener("click", (e)=>{
       if(!screen2.classList.contains("hidden")){
         burstFlowers(e.clientX, e.clientY, 22);
