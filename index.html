@@ -136,16 +136,28 @@
 
   <!-- Put an mp3 named "music.mp3" in the same folder (optional) -->
 <!-- Hidden YouTube Background Music -->
-<iframe
-  id="ytplayer"
-  width="0"
-  height="0"
-  src="https://www.youtube.com/watch?v=rtOvBOTyX00"
-  frameborder="0"
-  allow="autoplay"
-  allowfullscreen
-  style="position:absolute; left:-9999px;"
-></iframe>
+<!-- Hidden YouTube Background Music -->
+<div id="player" style="position:absolute; left:-9999px;"></div>
+
+<script src="https://www.youtube.com/iframe_api">
+
+  let player;
+
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+      height: '0',
+      width: '0',
+      videoId: 'rtOvBOTyX00',
+      playerVars: {
+        'autoplay': 0,
+        'controls': 0,
+        'loop': 1,
+        'playlist': 'rtOvBOTyX00'
+      }
+    });
+  }
+
+</script>
 
 
   <script>
@@ -207,6 +219,10 @@
       const rect = btn.getBoundingClientRect();
       burstFlowers(rect.left + rect.width/2, rect.top + rect.height/2, 55);
       setTimeout(centerBurst, 250);
+
+      if (player) {
+        player.playVideo();
+      }
     });
 
     replay.addEventListener("click", ()=>{
