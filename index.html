@@ -66,13 +66,10 @@
       transform: translateY(0);
       transition: transform .12s ease, filter .12s ease;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .btn:active{ transform: translateY(2px); filter: brightness(.96); }
-    .hint{
-      font-size: 13px;
-      opacity: .75;
-      margin-top: 10px;
-    }
+    .hint{ font-size: 13px; opacity: .75; margin-top: 10px; }
     .hidden{ display:none; }
 
     /* Flower burst */
@@ -123,25 +120,24 @@
     <div id="screen1">
       <h1>Hi Love 💗</h1>
       <p>Tap the button for a little surprise 🌸</p>
-      <button class="btn" id="surpriseBtn">Tap Me 💐</button>
-      <div class="hint" id="musicHint"></div>
+      <button class="btn" id="surpriseBtn" type="button">Tap Me 💐</button>
     </div>
 
     <div id="screen2" class="hidden">
-      <h1>Happy Valentine’s, Love! 💗</h1>
+      <h1>Happy Heart’s Day, Love! 💗</h1>
       <p>
         Thank you for being my peace, my best friend, and my home.<br/>
         I love you—today and always.
       </p>
-      <button class="btn" id="replayBtn">Replay Flowers 🌸</button>
+      <button class="btn" id="replayBtn" type="button">Replay Flowers 🌸</button>
       <div class="hint">Tap anywhere for more flowers ✨</div>
     </div>
   </div>
 
-  <!-- iPhone-safe background music: add music.m4a (best) or music.mp3 next to index.html -->
+  <!-- Put music.m4a (BEST for iPhone) or music.mp3 beside index.html -->
   <audio id="bgm" preload="auto" loop playsinline webkit-playsinline>
-    <source src="music.m4a" type="audio/mp4" />
-    <source src="music.mp3" type="audio/mpeg" />
+    <source src="./music.m4a" type="audio/mp4" />
+    <source src="./music.mp3" type="audio/mpeg" />
   </audio>
 
   <script>
@@ -150,7 +146,6 @@
     const btn = document.getElementById("surpriseBtn");
     const replay = document.getElementById("replayBtn");
     const bgm = document.getElementById("bgm");
-    const musicHint = document.getElementById("musicHint");
 
     function burstFlowers(x, y, count = 40){
       for(let i=0;i<count;i++){
@@ -197,35 +192,36 @@
       sprinkleHearts();
     }
 
-    async function startMusicOnTap(){
+    // iPhone “unlock” + play
+    function playMusicNow(){
       try{
-        // iOS likes this inside user gesture
         bgm.volume = 0.85;
+        bgm.muted = false;
         bgm.currentTime = 0;
 
-        // Sometimes iOS needs a tiny delay still within same gesture stack
-        await bgm.play();
-
-        musicHint.textContent = ""; // keep clean (no extra UI)
-      } catch (err){
-        // Keep UI clean as requested, but log for debugging
-        console.log("Music play blocked or file missing:", err);
-      }
+        const p = bgm.play();
+        if (p && typeof p.then === "function") {
+          p.catch(() => {
+            // retry once quickly (helps some iOS cases)
+            setTimeout(() => { try { bgm.play(); } catch(e) {} }, 150);
+          });
+        }
+      } catch(e) {}
     }
 
-    btn.addEventListener("click", async ()=>{
-      // Switch screen
+    // Use pointerdown for iOS reliability (fires earlier than click)
+    btn.addEventListener("pointerdown", () => {
+      // Start music FIRST (before any UI work)
+      playMusicNow();
+
+      // Then do visuals
       screen1.classList.add("hidden");
       screen2.classList.remove("hidden");
 
-      // Flowers
       const rect = btn.getBoundingClientRect();
       burstFlowers(rect.left + rect.width/2, rect.top + rect.height/2, 55);
       setTimeout(centerBurst, 250);
-
-      // Music (must happen on this tap)
-      await startMusicOnTap();
-    });
+    }, { passive: true });
 
     replay.addEventListener("click", ()=>{
       centerBurst();
